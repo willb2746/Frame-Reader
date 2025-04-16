@@ -76,63 +76,69 @@
         
         <main>
             <div class="timeline-section">
-                <div class="timeline-container">
-                    <div id="timeline" class="timeline"></div>
+                <div class="timeline-header" onclick="document.getElementById('timeline-toggle').click();">
+                    <h2>Timeline</h2>
+                    <button id="timeline-toggle" class="collapse-btn" title="Toggle timeline visibility" onclick="event.stopPropagation();">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
                 </div>
-                <div class="timeline-playback">
-                    <div class="playback-controls">
-                        <button id="play-btn" class="playback-btn">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <button id="pause-btn" class="playback-btn" style="display: none;">
-                            <i class="fas fa-pause"></i>
-                        </button>
-                        <button id="step-back-btn" class="playback-btn">
-                            <i class="fas fa-step-backward"></i>
-                        </button>
-                        <button id="step-forward-btn" class="playback-btn">
-                            <i class="fas fa-step-forward"></i>
-                        </button>
-                    </div>
-                    <div class="playback-range">
-                        <span id="current-time">0.000</span>
-                        <div class="range-slider">
-                            <input type="range" id="time-slider" min="0" max="100" value="0" class="range-input">
+                <div class="timeline-content">
+                    <div class="timeline-playback">
+                        <div class="playback-controls">
+                            <button id="play-btn" class="playback-btn">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button id="pause-btn" class="playback-btn" style="display: none;">
+                                <i class="fas fa-pause"></i>
+                            </button>
+                            <button id="step-back-btn" class="playback-btn">
+                                <i class="fas fa-step-backward"></i>
+                            </button>
+                            <button id="step-forward-btn" class="playback-btn">
+                                <i class="fas fa-step-forward"></i>
+                            </button>
                         </div>
-                        <span id="max-time">0.000</span>
-                    </div>
-                    <div class="playback-speed">
-                        <span>Speed:</span>
-                        <select id="speed-select" class="speed-select">
-                            <option value="0.25">0.25x</option>
-                            <option value="0.5">0.5x</option>
-                            <option value="1" selected>1x</option>
-                            <option value="2">2x</option>
-                            <option value="4">4x</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Audio Player -->
-                <div id="audio-container" class="audio-container" style="display: none;">
-                    <div class="audio-info">
-                        <i class="fas fa-music"></i>
-                        <span id="audio-filename">No audio file loaded</span>
-                    </div>
-                    <div class="waveform-container">
-                        <canvas id="waveform-canvas" class="waveform-canvas"></canvas>
-                        <div id="waveform-progress" class="waveform-progress"></div>
-                        <div class="waveform-time-markers">
-                            <span id="waveform-start-time">0:00</span>
-                            <span id="waveform-end-time">0:00</span>
+                        <div class="playback-range">
+                            <span id="current-time">0.000</span>
+                            <div class="range-slider">
+                                <input type="range" id="time-slider" min="0" max="100" value="0" class="range-input">
+                            </div>
+                            <span id="max-time">0.000</span>
+                        </div>
+                        <div class="playback-speed">
+                            <span>Speed:</span>
+                            <select id="speed-select" class="speed-select">
+                                <option value="0.25">0.25x</option>
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1x</option>
+                                <option value="2">2x</option>
+                                <option value="4">4x</option>
+                            </select>
                         </div>
                     </div>
-                    <audio id="audio-player" controls preload="metadata" controlsList="nodownload noplaybackrate">
-                        <source src="" type="audio/mpeg">
-                        <source src="" type="audio/wav">
-                        <source src="" type="audio/ogg">
-                        Your browser does not support the audio element.
-                    </audio>
+                    
+                    <!-- Audio Waveform -->
+                    <div id="audio-container" class="audio-container" style="display: none;">
+                        <div class="audio-info">
+                            <i class="fas fa-music"></i>
+                            <span id="audio-filename">No audio file loaded</span>
+                        </div>
+                        <div class="waveform-container">
+                            <canvas id="waveform-canvas" class="waveform-canvas"></canvas>
+                            <div id="waveform-progress" class="waveform-progress"></div>
+                            <div class="waveform-time-markers">
+                                <span id="waveform-start-time">0:00</span>
+                                <span id="waveform-end-time">0:00</span>
+                            </div>
+                        </div>
+                        <!-- Audio element is hidden but needed for playback -->
+                        <audio id="audio-player" style="display: none;">
+                            <source src="" type="audio/mpeg">
+                            <source src="" type="audio/wav">
+                            <source src="" type="audio/ogg">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
                 </div>
             </div>
             

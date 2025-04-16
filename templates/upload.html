@@ -206,6 +206,15 @@
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+        
+        .two-columns {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .column {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -258,9 +267,9 @@
                     <p class="upload-subtext">Upload your log and audio files to analyze conversation frames.</p>
                     
                     <form class="upload-form" action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="upload-form">
-                        <div class="upload-section">
+                        <div class="upload-section two-columns">
                             <!-- Log file upload -->
-                            <div>
+                            <div class="column">
                                 <h3>Log File</h3>
                                 <div class="dropzone" id="log-dropzone">
                                     <i class="fas fa-file-alt upload-icon"></i>
@@ -271,7 +280,7 @@
                             </div>
                             
                             <!-- Audio file upload -->
-                            <div>
+                            <div class="column">
                                 <h3>Audio File</h3>
                                 <div class="dropzone" id="audio-dropzone">
                                     <i class="fas fa-music upload-icon"></i>
@@ -301,69 +310,75 @@
                         <p>Select files to use or delete unwanted files.</p>
                     </div>
                     
-                    <!-- Log files section -->
-                    <h3>Log Files</h3>
-                    {% if log_files %}
-                        <div class="file-grid">
-                            {% for file in log_files %}
-                                <div class="file-card {% if current_log == file %}selected{% endif %}" data-file="{{ file }}" data-type="log">
-                                    <div class="file-card-header">
-                                        <i class="fas fa-file-alt file-icon"></i>
-                                        {% if current_log == file %}
-                                            <span class="badge"><i class="fas fa-check-circle"></i></span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="file-name">{{ file }}</div>
-                                    <div class="file-type">Log File</div>
-                                    <div class="file-actions">
-                                        <button type="button" class="select-btn" onclick="selectFile('log', '{{ file }}')">
-                                            <i class="fas fa-check"></i> Select
-                                        </button>
-                                        <button type="button" class="delete-btn" onclick="deleteFile('log', '{{ file }}')">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
+                    <div class="two-columns">
+                        <!-- Log files section -->
+                        <div class="column">
+                            <h3>Log Files</h3>
+                            {% if log_files %}
+                                <div class="file-grid">
+                                    {% for file in log_files %}
+                                        <div class="file-card {% if current_log == file %}selected{% endif %}" data-file="{{ file }}" data-type="log">
+                                            <div class="file-card-header">
+                                                <i class="fas fa-file-alt file-icon"></i>
+                                                {% if current_log == file %}
+                                                    <span class="badge"><i class="fas fa-check-circle"></i></span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="file-name">{{ file }}</div>
+                                            <div class="file-type">Log File</div>
+                                            <div class="file-actions">
+                                                <button type="button" class="select-btn" onclick="selectFile('log', '{{ file }}')">
+                                                    <i class="fas fa-check"></i> Select
+                                                </button>
+                                                <button type="button" class="delete-btn" onclick="deleteFile('log', '{{ file }}')">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
                                 </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-file-alt empty-icon"></i>
-                            <p>No log files uploaded yet</p>
-                        </div>
-                    {% endif %}
-                    
-                    <!-- Audio files section -->
-                    <h3 style="margin-top: 2rem;">Audio Files</h3>
-                    {% if audio_files %}
-                        <div class="file-grid">
-                            {% for file in audio_files %}
-                                <div class="file-card {% if current_audio == file %}selected{% endif %}" data-file="{{ file }}" data-type="audio">
-                                    <div class="file-card-header">
-                                        <i class="fas fa-music file-icon"></i>
-                                        {% if current_audio == file %}
-                                            <span class="badge"><i class="fas fa-check-circle"></i></span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="file-name">{{ file }}</div>
-                                    <div class="file-type">Audio File</div>
-                                    <div class="file-actions">
-                                        <button type="button" class="select-btn" onclick="selectFile('audio', '{{ file }}')">
-                                            <i class="fas fa-check"></i> Select
-                                        </button>
-                                        <button type="button" class="delete-btn" onclick="deleteFile('audio', '{{ file }}')">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-file-alt empty-icon"></i>
+                                    <p>No log files uploaded yet</p>
                                 </div>
-                            {% endfor %}
+                            {% endif %}
                         </div>
-                    {% else %}
-                        <div class="empty-state">
-                            <i class="fas fa-music empty-icon"></i>
-                            <p>No audio files uploaded yet</p>
+                        
+                        <!-- Audio files section -->
+                        <div class="column">
+                            <h3>Audio Files</h3>
+                            {% if audio_files %}
+                                <div class="file-grid">
+                                    {% for file in audio_files %}
+                                        <div class="file-card {% if current_audio == file %}selected{% endif %}" data-file="{{ file }}" data-type="audio">
+                                            <div class="file-card-header">
+                                                <i class="fas fa-music file-icon"></i>
+                                                {% if current_audio == file %}
+                                                    <span class="badge"><i class="fas fa-check-circle"></i></span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="file-name">{{ file }}</div>
+                                            <div class="file-type">Audio File</div>
+                                            <div class="file-actions">
+                                                <button type="button" class="select-btn" onclick="selectFile('audio', '{{ file }}')">
+                                                    <i class="fas fa-check"></i> Select
+                                                </button>
+                                                <button type="button" class="delete-btn" onclick="deleteFile('audio', '{{ file }}')">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="fas fa-music empty-icon"></i>
+                                    <p>No audio files uploaded yet</p>
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </main>

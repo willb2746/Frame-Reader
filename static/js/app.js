@@ -26,31 +26,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // DOM elements
     const framesList = document.getElementById('frames-list');
-    const timeline = document.getElementById('timeline');
-    const frameTypeFilters = document.getElementById('frame-type-filters');
-    const componentFilters = document.getElementById('component-filters');
-    const componentSearch = document.getElementById('component-search');
-    const totalFramesElement = document.getElementById('total-frames');
-    const filteredFramesElement = document.getElementById('filtered-frames');
-    const downstreamFilter = document.getElementById('downstream-filter');
-    const upstreamFilter = document.getElementById('upstream-filter');
+    const timeSlider = document.getElementById('time-slider');
+    const currentTimeElement = document.getElementById('current-time');
+    const maxTimeElement = document.getElementById('max-time');
     const playBtn = document.getElementById('play-btn');
     const pauseBtn = document.getElementById('pause-btn');
     const stepBackBtn = document.getElementById('step-back-btn');
     const stepForwardBtn = document.getElementById('step-forward-btn');
-    const timeSlider = document.getElementById('time-slider');
-    const currentTimeElement = document.getElementById('current-time');
-    const maxTimeElement = document.getElementById('max-time');
     const speedSelect = document.getElementById('speed-select');
-    const resetFrameTypesBtn = document.getElementById('reset-frame-types');
-    const resetComponentsBtn = document.getElementById('reset-components');
-    const resetDirectionBtn = document.getElementById('reset-direction');
-    const audioContainer = document.getElementById('audio-container');
-    const audioFilename = document.getElementById('audio-filename');
-    const currentLogFile = document.getElementById('current-log-file');
-    const syncStatus = document.getElementById('sync-status');
-    const debugButton = document.getElementById('debug-btn');
-
+    let totalFramesElement = document.getElementById('total-frames');
+    let filteredFramesElement = document.getElementById('filtered-frames');
+    let currentLogFile = document.getElementById('current-log-file');
+    let syncStatus = document.getElementById('sync-status');
+    let debugButton = document.getElementById('debug-btn');
+    let audioContainer = document.getElementById('audio-container');
+    let audioFilename = document.getElementById('audio-filename');
+    
     // Initialize collapsible sections
     initializeCollapsibleSections();
 
@@ -188,7 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check if we have any frames
         if (frames.length === 0) {
             console.error("No frames loaded! Please check your log file.");
-            currentLogFile.innerHTML = `<span style="color: var(--error-color);">No frames loaded! Please check your log file or upload a new one.</span>`;
+            if (currentLogFile) {
+                currentLogFile.innerHTML = `<span style="color: var(--error-color);">No frames loaded! Please check your log file or upload a new one.</span>`;
+            }
             return;
         }
         
@@ -219,14 +212,16 @@ document.addEventListener('DOMContentLoaded', () => {
         initializePlaybackControls();
         updateStats();
         renderFrames();
-        renderTimeline();
     }).catch(error => {
         console.error('Error fetching data:', error);
-        currentLogFile.innerHTML = `<span style="color: var(--error-color);">Error loading frames: ${error.message}</span>`;
+        if (currentLogFile) {
+            currentLogFile.innerHTML = `<span style="color: var(--error-color);">Error loading frames: ${error.message}</span>`;
+        }
     });
 
     // Initialize frame type filters
     function initializeFrameTypeFilters(frameTypes) {
+        const frameTypeFilters = document.getElementById('frame-type-filters');
         frameTypeFilters.innerHTML = '';
         frameTypes.forEach(type => {
             const chip = createFilterChip(type);
@@ -237,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // Reset button
+        const resetFrameTypesBtn = document.getElementById('reset-frame-types');
         resetFrameTypesBtn.addEventListener('click', () => {
             activeFrameTypes.clear();
             Array.from(frameTypeFilters.children).forEach(chip => {
@@ -248,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize component filters
     function initializeComponentFilters(components) {
+        const componentFilters = document.getElementById('component-filters');
         componentFilters.innerHTML = '';
         components.sort().forEach(component => {
             const chip = createFilterChip(component);
@@ -261,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Component search
+        const componentSearch = document.getElementById('component-search');
         componentSearch.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             Array.from(componentFilters.children).forEach(chip => {
@@ -270,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // Reset button
+        const resetComponentsBtn = document.getElementById('reset-components');
         resetComponentsBtn.addEventListener('click', () => {
             activeComponents.clear();
             Array.from(componentFilters.children).forEach(chip => {
@@ -281,6 +280,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize direction filters
     function initializeDirectionFilters() {
+        const downstreamFilter = document.getElementById('downstream-filter');
+        const upstreamFilter = document.getElementById('upstream-filter');
+        
         downstreamFilter.addEventListener('click', () => {
             toggleDirectionFilter('downstream', downstreamFilter);
         });
@@ -290,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // Reset button
+        const resetDirectionBtn = document.getElementById('reset-direction');
         resetDirectionBtn.addEventListener('click', () => {
             activeDirections.clear();
             downstreamFilter.classList.remove('active');
@@ -300,6 +303,35 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize playback controls
     function initializePlaybackControls() {
+        // Toggle timeline section visibility
+        const timelineToggleBtn = document.getElementById('timeline-toggle');
+        const timelineSection = document.querySelector('.timeline-section');
+        
+        if (timelineToggleBtn && timelineSection) {
+            // Check if we have a saved preference
+            const isTimelineCollapsed = localStorage.getItem('timeline_collapsed') === 'true';
+            
+            // Apply initial state
+            if (isTimelineCollapsed) {
+                timelineSection.classList.add('collapsed');
+                timelineToggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+            }
+            
+            // Add click event
+            timelineToggleBtn.addEventListener('click', () => {
+                timelineSection.classList.toggle('collapsed');
+                const isNowCollapsed = timelineSection.classList.contains('collapsed');
+                
+                // Update button icon
+                timelineToggleBtn.innerHTML = isNowCollapsed 
+                    ? '<i class="fas fa-chevron-down"></i>' 
+                    : '<i class="fas fa-chevron-up"></i>';
+                
+                // Save preference
+                localStorage.setItem('timeline_collapsed', isNowCollapsed);
+            });
+        }
+        
         // Play/Pause buttons
         playBtn.addEventListener('click', () => {
             startPlayback();
@@ -473,179 +505,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (audioSyncEnabled && audioLoaded) {
                     audioPlayer.currentTime = Math.max(0, frame.timestamp - audioOffset);
                 }
-                
-                // Highlight this frame in the timeline
-                highlightTimelineMarker(frame.timestamp);
             });
             
             framesList.appendChild(frameElement);
         });
     }
 
-    // Render timeline with markers for each frame
-    function renderTimeline() {
-        timeline.innerHTML = '';
-        
-        // Group frames by timestamp for better visualization
-        const timeToFrames = new Map();
-        allFrames.forEach(frame => {
-            if (!timeToFrames.has(frame.timestamp)) {
-                timeToFrames.set(frame.timestamp, []);
-            }
-            timeToFrames.get(frame.timestamp).push(frame);
-        });
-        
-        // Create markers
-        timeToFrames.forEach((frames, time) => {
-            // Determine if any frames are downstream/upstream
-            const hasDownstream = frames.some(f => f.direction === 'downstream');
-            const hasUpstream = frames.some(f => f.direction === 'upstream');
-            
-            const marker = document.createElement('div');
-            marker.className = 'timeline-marker';
-            
-            // Add direction class if there's only one direction
-            if (hasDownstream && !hasUpstream) {
-                marker.classList.add('downstream');
-            } else if (hasUpstream && !hasDownstream) {
-                marker.classList.add('upstream');
-            }
-            
-            marker.setAttribute('data-time', time);
-            marker.style.left = `${(time / maxTimestamp) * 100}%`;
-            
-            // Make marker height proportional to number of frames at this timestamp
-            const heightPercentage = Math.min(100, 20 + (frames.length / allFrames.length) * 80);
-            marker.style.height = `${heightPercentage}%`;
-            marker.style.top = `${100 - heightPercentage}%`;
-            
-            marker.addEventListener('click', () => {
-                // Update time slider
-                timeSlider.value = time * 1000;
-                currentTimeElement.textContent = parseFloat(time).toFixed(3);
-                
-                // Update audio player time if sync is enabled
-                if (audioSyncEnabled && audioLoaded) {
-                    audioPlayer.currentTime = Math.max(0, time - audioOffset);
-                }
-                
-                // Filter to show only frames at this timestamp
-                highlightFramesAtTime(parseFloat(time));
-            });
-            
-            timeline.appendChild(marker);
-        });
-    }
-    
-    // Playback controls
-    function startPlayback() {
-        if (isPlaying) return;
-        
-        isPlaying = true;
-        playBtn.style.display = 'none';
-        pauseBtn.style.display = 'flex';
-        
-        // If audio is loaded and sync is enabled, use audio playback
-        if (audioLoaded && audioSyncEnabled) {
-            audioPlayer.play();
-            return;
-        }
-        
-        // Otherwise use manual frame playback
-        const speed = parseFloat(speedSelect.value);
-        const interval = 500 / speed; // Base interval is 500ms, adjusted by speed
-        
-        playbackInterval = setInterval(() => {
-            stepForward();
-            
-            // If we reached the end, stop playback
-            if (currentFrameIndex >= filteredFrames.length - 1) {
-                stopPlayback();
-            }
-        }, interval);
-    }
-    
-    function stopPlayback() {
-        if (!isPlaying) return;
-        
-        isPlaying = false;
-        
-        // Stop audio if it's playing and sync is enabled
-        if (audioLoaded && audioSyncEnabled) {
-            audioPlayer.pause();
-        }
-        
-        // Clear the interval for manual frame playback
-        clearInterval(playbackInterval);
-        
-        // Update UI
-        playBtn.style.display = 'flex';
-        pauseBtn.style.display = 'none';
-    }
-    
-    function resetPlayback() {
-        stopPlayback();
-        currentFrameIndex = 0;
-        if (filteredFrames.length > 0) {
-            timeSlider.value = filteredFrames[0].timestamp * 1000;
-            currentTimeElement.textContent = filteredFrames[0].timestamp.toFixed(3);
-            highlightCurrentFrame();
-            
-            // Reset audio to beginning if sync is enabled
-            if (audioLoaded && audioSyncEnabled) {
-                audioPlayer.currentTime = Math.max(0, filteredFrames[0].timestamp - audioOffset);
-            }
-        } else {
-            timeSlider.value = 0;
-            currentTimeElement.textContent = '0.000';
-            
-            // Reset audio to beginning if loaded
-            if (audioLoaded) {
-                audioPlayer.currentTime = 0;
-            }
-        }
-    }
-    
-    function stepForward() {
-        if (currentFrameIndex < filteredFrames.length - 1) {
-            currentFrameIndex++;
-            const frame = filteredFrames[currentFrameIndex];
-            timeSlider.value = frame.timestamp * 1000;
-            currentTimeElement.textContent = frame.timestamp.toFixed(3);
-            
-            // Update audio position if sync is enabled
-            if (audioLoaded && audioSyncEnabled) {
-                audioPlayer.currentTime = Math.max(0, frame.timestamp - audioOffset);
-            }
-            
-            highlightCurrentFrame();
-            highlightTimelineMarker(frame.timestamp);
-            
-            // Scroll to the current frame
-            scrollToCurrentFrame();
-        }
-    }
-    
-    function stepBackward() {
-        if (currentFrameIndex > 0) {
-            currentFrameIndex--;
-            const frame = filteredFrames[currentFrameIndex];
-            timeSlider.value = frame.timestamp * 1000;
-            currentTimeElement.textContent = frame.timestamp.toFixed(3);
-            
-            // Update audio position if sync is enabled
-            if (audioLoaded && audioSyncEnabled) {
-                audioPlayer.currentTime = Math.max(0, frame.timestamp - audioOffset);
-            }
-            
-            highlightCurrentFrame();
-            highlightTimelineMarker(frame.timestamp);
-            
-            // Scroll to the current frame
-            scrollToCurrentFrame();
-        }
-    }
-    
     function highlightCurrentFrame() {
         // Remove active class from all frames
         Array.from(framesList.children).forEach(frameElem => {
@@ -658,20 +523,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function highlightTimelineMarker(timestamp) {
-        // Remove active class from all markers
-        Array.from(timeline.children).forEach(marker => {
-            marker.classList.remove('active');
-        });
-        
-        // Add active class to the marker at this timestamp
-        const markers = Array.from(timeline.children);
-        const marker = markers.find(m => parseFloat(m.getAttribute('data-time')) === timestamp);
-        if (marker) {
-            marker.classList.add('active');
-        }
-    }
-    
     function highlightFramesAtTime(time) {
         // Find frames at this exact timestamp
         const framesAtTime = filteredFrames.filter(frame => Math.abs(frame.timestamp - time) < 0.001);
@@ -680,7 +531,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Find the index of the first frame at this timestamp
             currentFrameIndex = filteredFrames.findIndex(frame => Math.abs(frame.timestamp - time) < 0.001);
             highlightCurrentFrame();
-            highlightTimelineMarker(framesAtTime[0].timestamp);
             
             // Scroll to the frame
             scrollToCurrentFrame();
@@ -693,7 +543,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentFrameIndex = filteredFrames.findIndex(frame => frame.timestamp === nearestFrame.timestamp);
                 
                 highlightCurrentFrame();
-                highlightTimelineMarker(nearestFrame.timestamp);
                 
                 // Scroll to the frame
                 scrollToCurrentFrame();
@@ -1183,5 +1032,112 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.classList.add('collapsed');
             }
         });
+    }
+
+    // Playback controls
+    function startPlayback() {
+        if (isPlaying) return;
+        
+        isPlaying = true;
+        playBtn.style.display = 'none';
+        pauseBtn.style.display = 'flex';
+        
+        // If audio is loaded and sync is enabled, use audio playback
+        if (audioLoaded && audioSyncEnabled) {
+            audioPlayer.play();
+            return;
+        }
+        
+        // Otherwise use manual frame playback
+        const speed = parseFloat(speedSelect.value);
+        const interval = 500 / speed; // Base interval is 500ms, adjusted by speed
+        
+        playbackInterval = setInterval(() => {
+            stepForward();
+            
+            // If we reached the end, stop playback
+            if (currentFrameIndex >= filteredFrames.length - 1) {
+                stopPlayback();
+            }
+        }, interval);
+    }
+    
+    function stopPlayback() {
+        if (!isPlaying) return;
+        
+        isPlaying = false;
+        
+        // Stop audio if it's playing and sync is enabled
+        if (audioLoaded && audioSyncEnabled) {
+            audioPlayer.pause();
+        }
+        
+        // Clear the interval for manual frame playback
+        clearInterval(playbackInterval);
+        
+        // Update UI
+        playBtn.style.display = 'flex';
+        pauseBtn.style.display = 'none';
+    }
+    
+    function resetPlayback() {
+        stopPlayback();
+        currentFrameIndex = 0;
+        if (filteredFrames.length > 0) {
+            timeSlider.value = filteredFrames[0].timestamp * 1000;
+            currentTimeElement.textContent = filteredFrames[0].timestamp.toFixed(3);
+            highlightCurrentFrame();
+            
+            // Reset audio to beginning if sync is enabled
+            if (audioLoaded && audioSyncEnabled) {
+                audioPlayer.currentTime = Math.max(0, filteredFrames[0].timestamp - audioOffset);
+            }
+        } else {
+            timeSlider.value = 0;
+            currentTimeElement.textContent = '0.000';
+            
+            // Reset audio to beginning if loaded
+            if (audioLoaded) {
+                audioPlayer.currentTime = 0;
+            }
+        }
+    }
+    
+    function stepForward() {
+        if (currentFrameIndex < filteredFrames.length - 1) {
+            currentFrameIndex++;
+            const frame = filteredFrames[currentFrameIndex];
+            timeSlider.value = frame.timestamp * 1000;
+            currentTimeElement.textContent = frame.timestamp.toFixed(3);
+            
+            // Update audio position if sync is enabled
+            if (audioLoaded && audioSyncEnabled) {
+                audioPlayer.currentTime = Math.max(0, frame.timestamp - audioOffset);
+            }
+            
+            highlightCurrentFrame();
+            
+            // Scroll to the current frame
+            scrollToCurrentFrame();
+        }
+    }
+    
+    function stepBackward() {
+        if (currentFrameIndex > 0) {
+            currentFrameIndex--;
+            const frame = filteredFrames[currentFrameIndex];
+            timeSlider.value = frame.timestamp * 1000;
+            currentTimeElement.textContent = frame.timestamp.toFixed(3);
+            
+            // Update audio position if sync is enabled
+            if (audioLoaded && audioSyncEnabled) {
+                audioPlayer.currentTime = Math.max(0, frame.timestamp - audioOffset);
+            }
+            
+            highlightCurrentFrame();
+            
+            // Scroll to the current frame
+            scrollToCurrentFrame();
+        }
     }
 }); 
