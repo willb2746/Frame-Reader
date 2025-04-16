@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config['UPLOAD_FOLDER_LOGS'] = 'uploads/logs'
 app.config['UPLOAD_FOLDER_AUDIO'] = 'uploads/audio'
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload size
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload sizeh
 app.config['ALLOWED_EXTENSIONS_LOGS'] = {'log', 'txt'}
 app.config['ALLOWED_EXTENSIONS_AUDIO'] = {'mp3', 'wav', 'm4a', 'ogg'}
 
