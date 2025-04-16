@@ -1,59 +1,45 @@
-# Frame Viewer
+# Frame Reader
 
-A simple, dark mode UI for viewing and filtering pipeline frames from a log file, with audio synchronization capabilities.
+A visualization and analysis tool for conversation frames with audio synchronization capabilities.
 
 ## Features
 
-- Dark mode UI
-- View all frames in a scrollable list
-- Filter frames by type, component, and direction
-- Interactive timeline with markers
-- Search for specific components
-- Audio playback synchronized with frames
-- File upload for log files and audio recordings
+- Timeline visualization of conversation frames
+- Audio waveform display with dual-channel visualization
+- Latency measurement between user and AI messages
+- Synchronized playback of audio with frame data
+- Collapsible filter sections for frame types and components
+- Responsive design for different screen sizes
 
 ## Setup
 
-1. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-2. Run the application:
-
-```bash
-python app.py
-```
-
-3. Open your browser and navigate to:
-
-```
-http://127.0.0.1:5000
-```
+1. Clone the repository
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Run the application:
+   ```
+   python app.py
+   ```
+4. Open your browser and navigate to `http://localhost:5005`
 
 ## Usage
 
-### Frame Viewer
-- **Frame Types Filter**: Click on frame types to filter the displayed frames
-- **Components Filter**: Search and select components to filter frames
-- **Direction Filter**: Filter based on upstream or downstream direction
-- **Timeline**: Click on timeline markers to show frames at that specific timestamp
-- **Frame List**: View detailed information about each frame
-- **Playback Controls**: Play/pause, step forward/backward through frames
+1. Upload a log file (.log or .txt) containing conversation frames
+2. Optionally upload an audio file (.mp3, .wav, .m4a, or .ogg) to synchronize with frames
+3. Use the filters to focus on specific frame types, components, or directions
+4. Use the timeline to navigate through the conversation
+5. Press 'L' to toggle latency visualization on the waveform
 
-### Audio Synchronization
-- **Audio Playback**: When an audio file is loaded, it will play in sync with the frames
-- **Sync Toggle**: Press the 's' key to toggle audio synchronization on/off
-- **Speed Control**: Adjust playback speed with the speed selector (affects both frame and audio playback)
+## File Format
 
-### File Upload
-- Navigate to the Upload page to add new log files and audio recordings
-- Upload new files or select from previously uploaded files
-- System will automatically associate the selected log and audio files
+The application expects log files with frames in the format:
+```
+timestamp: frame_type: source ↓ destination
+timestamp: frame_type: source ↑ destination
+```
 
-## Notes
+## Credits
 
-The application parses log files matching the format: `timestamp: frame_type: source → destination`
-
-Audio files and log files are stored in the `uploads/audio` and `uploads/logs` directories respectively. 
+Created by Will Bodewes 
