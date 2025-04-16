@@ -6,106 +6,486 @@
     <title>Upload Files - Frame Viewer</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .upload-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .file-uploader {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .file-manager {
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .file-manager-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .file-card {
+            background-color: var(--surface-color-hover);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .file-card.selected {
+            border-color: var(--primary-color);
+        }
+        
+        .file-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+        
+        .file-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .file-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .file-name {
+            word-break: break-all;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .file-type {
+            font-size: 0.8rem;
+            color: var(--text-color-secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+        
+        .select-btn, .delete-btn {
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        
+        .select-btn {
+            background-color: var(--primary-color);
+            color: #000;
+        }
+        
+        .select-btn:hover {
+            background-color: #a278e0;
+        }
+        
+        .delete-btn {
+            background-color: transparent;
+            color: var(--error-color);
+        }
+        
+        .delete-btn:hover {
+            background-color: var(--error-color);
+            color: #000;
+        }
+        
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 1.5rem;
+        }
+        
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(187, 134, 252, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-text {
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .upload-subtext {
+            font-size: 0.85rem;
+            color: var(--text-color-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .status-banner {
+            background-color: var(--surface-color-hover);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .status-icon {
+            font-size: 1.5rem;
+        }
+        
+        .status-icon.success {
+            color: #4caf50;
+        }
+        
+        .status-icon.warning {
+            color: #ff9800;
+        }
+        
+        .status-message {
+            flex: 1;
+        }
+        
+        .status-action {
+            white-space: nowrap;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-color-secondary);
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Upload Files</h1>
-            <div class="nav-links">
-                <a href="{{ url_for('index') }}" class="nav-link">
-                    <i class="fas fa-chart-line"></i> Frame Viewer
-                </a>
-                <a href="{{ url_for('upload_page') }}" class="nav-link active">
-                    <i class="fas fa-upload"></i> Upload Files
-                </a>
-                <a href="{{ url_for('reset_state') }}" class="nav-link nav-link-reset">
-                    <i class="fas fa-sync-alt"></i> Reset
-                </a>
+            <div class="header-top">
+                <h1>Frame Reader</h1>
+                <div class="nav-links">
+                    <a href="{{ url_for('index') }}" class="nav-link">
+                        <i class="fas fa-chart-line"></i> Viewer
+                    </a>
+                    <a href="{{ url_for('upload_page') }}" class="nav-link active">
+                        <i class="fas fa-upload"></i> Files
+                    </a>
+                    <a href="{{ url_for('reset_state') }}" class="nav-link nav-link-reset">
+                        <i class="fas fa-sync-alt"></i> Reset
+                    </a>
+                </div>
             </div>
         </header>
         
         <main>
             <div class="upload-container">
-                <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" class="upload-form">
-                    <div class="upload-section">
-                        <h2>Upload New Files</h2>
-                        
-                        <div class="upload-group">
-                            <label for="log_file">Log File:</label>
-                            <div class="file-input-container">
-                                <input type="file" id="log_file" name="log_file" accept=".log,.txt" class="file-input">
-                                <div class="file-input-custom">
-                                    <span class="file-input-text">Select a log file...</span>
-                                    <span class="file-input-button">Browse</span>
+                <!-- Status banner for current selections -->
+                <div class="status-banner">
+                    <div class="status-icon {% if current_log and current_audio %}success{% else %}warning{% endif %}">
+                        <i class="fas {% if current_log and current_audio %}fa-check-circle{% else %}fa-exclamation-triangle{% endif %}"></i>
+                    </div>
+                    <div class="status-message">
+                        {% if current_log and current_audio %}
+                            <strong>Ready to view!</strong> You have selected both a log file and an audio file.
+                        {% elif current_log %}
+                            <strong>Log file selected.</strong> Please select an audio file to complete the setup.
+                        {% elif current_audio %}
+                            <strong>Audio file selected.</strong> Please select a log file to complete the setup.
+                        {% else %}
+                            <strong>Upload needed.</strong> Please select both a log file and an audio file to begin.
+                        {% endif %}
+                    </div>
+                    <div class="status-action">
+                        <a href="{{ url_for('index') }}" class="upload-btn {% if not current_log or not current_audio %}disabled{% endif %}">
+                            <i class="fas fa-play"></i> Go to Viewer
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Upload section -->
+                <div class="file-uploader">
+                    <h2>Upload New Files</h2>
+                    <p class="upload-subtext">Upload your log and audio files to analyze conversation frames.</p>
+                    
+                    <form class="upload-form" action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" id="upload-form">
+                        <div class="upload-section">
+                            <!-- Log file upload -->
+                            <div>
+                                <h3>Log File</h3>
+                                <div class="dropzone" id="log-dropzone">
+                                    <i class="fas fa-file-alt upload-icon"></i>
+                                    <div class="upload-text">Drag & drop a log file here</div>
+                                    <div class="upload-subtext">or click to browse (.log, .txt)</div>
+                                    <input type="file" name="log_file" id="log-file-input" class="file-input" accept=".log,.txt">
+                                </div>
+                            </div>
+                            
+                            <!-- Audio file upload -->
+                            <div>
+                                <h3>Audio File</h3>
+                                <div class="dropzone" id="audio-dropzone">
+                                    <i class="fas fa-music upload-icon"></i>
+                                    <div class="upload-text">Drag & drop an audio file here</div>
+                                    <div class="upload-subtext">or click to browse (.mp3, .wav, .ogg, .m4a)</div>
+                                    <input type="file" name="audio_file" id="audio-file-input" class="file-input" accept=".mp3,.wav,.ogg,.m4a">
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="upload-group">
-                            <label for="audio_file">Audio Recording:</label>
-                            <div class="file-input-container">
-                                <input type="file" id="audio_file" name="audio_file" accept=".mp3,.wav,.m4a,.ogg" class="file-input">
-                                <div class="file-input-custom">
-                                    <span class="file-input-text">Select an audio file...</span>
-                                    <span class="file-input-button">Browse</span>
+                        <!-- Hidden inputs for selected files -->
+                        <input type="hidden" name="selected_log" id="selected-log-input" value="">
+                        <input type="hidden" name="selected_audio" id="selected-audio-input" value="">
+                        
+                        <div class="upload-actions">
+                            <button type="submit" class="upload-btn" id="upload-btn">
+                                <i class="fas fa-upload"></i> Upload Files
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Manage existing files section -->
+                <div class="file-manager">
+                    <div class="file-manager-header">
+                        <h2>Manage Files</h2>
+                        <p>Select files to use or delete unwanted files.</p>
+                    </div>
+                    
+                    <!-- Log files section -->
+                    <h3>Log Files</h3>
+                    {% if log_files %}
+                        <div class="file-grid">
+                            {% for file in log_files %}
+                                <div class="file-card {% if current_log == file %}selected{% endif %}" data-file="{{ file }}" data-type="log">
+                                    <div class="file-card-header">
+                                        <i class="fas fa-file-alt file-icon"></i>
+                                        {% if current_log == file %}
+                                            <span class="badge"><i class="fas fa-check-circle"></i></span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="file-name">{{ file }}</div>
+                                    <div class="file-type">Log File</div>
+                                    <div class="file-actions">
+                                        <button type="button" class="select-btn" onclick="selectFile('log', '{{ file }}')">
+                                            <i class="fas fa-check"></i> Select
+                                        </button>
+                                        <button type="button" class="delete-btn" onclick="deleteFile('log', '{{ file }}')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            {% endfor %}
                         </div>
-                    </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt empty-icon"></i>
+                            <p>No log files uploaded yet</p>
+                        </div>
+                    {% endif %}
                     
-                    <div class="upload-section">
-                        <h2>Select Existing Files</h2>
-                        
-                        <div class="upload-group">
-                            <label for="selected_log">Log File:</label>
-                            <select id="selected_log" name="selected_log" class="file-select">
-                                <option value="">-- Select a log file --</option>
-                                {% for log_file in log_files %}
-                                <option value="{{ log_file }}" {% if log_file == current_log %}selected{% endif %}>{{ log_file }}</option>
-                                {% endfor %}
-                            </select>
+                    <!-- Audio files section -->
+                    <h3 style="margin-top: 2rem;">Audio Files</h3>
+                    {% if audio_files %}
+                        <div class="file-grid">
+                            {% for file in audio_files %}
+                                <div class="file-card {% if current_audio == file %}selected{% endif %}" data-file="{{ file }}" data-type="audio">
+                                    <div class="file-card-header">
+                                        <i class="fas fa-music file-icon"></i>
+                                        {% if current_audio == file %}
+                                            <span class="badge"><i class="fas fa-check-circle"></i></span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="file-name">{{ file }}</div>
+                                    <div class="file-type">Audio File</div>
+                                    <div class="file-actions">
+                                        <button type="button" class="select-btn" onclick="selectFile('audio', '{{ file }}')">
+                                            <i class="fas fa-check"></i> Select
+                                        </button>
+                                        <button type="button" class="delete-btn" onclick="deleteFile('audio', '{{ file }}')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
                         </div>
-                        
-                        <div class="upload-group">
-                            <label for="selected_audio">Audio Recording:</label>
-                            <select id="selected_audio" name="selected_audio" class="file-select">
-                                <option value="">-- Select an audio file --</option>
-                                {% for audio_file in audio_files %}
-                                <option value="{{ audio_file }}" {% if audio_file == current_audio %}selected{% endif %}>{{ audio_file }}</option>
-                                {% endfor %}
-                            </select>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-music empty-icon"></i>
+                            <p>No audio files uploaded yet</p>
                         </div>
-                    </div>
-                    
-                    <div class="upload-actions">
-                        <button type="submit" class="upload-btn">Save and Continue</button>
-                    </div>
-                </form>
+                    {% endif %}
+                </div>
             </div>
         </main>
-        
-        <footer>
-            <div class="current-files">
-                <div>Current Log File: <span class="current-file">{{ current_log if current_log else 'None' }}</span></div>
-                <div>Current Audio File: <span class="current-file">{{ current_audio if current_audio else 'None' }}</span></div>
-            </div>
-        </footer>
     </div>
     
     <script>
-        // Custom file input display
-        document.querySelectorAll('.file-input').forEach(fileInput => {
-            fileInput.addEventListener('change', function() {
-                const fileText = this.parentElement.querySelector('.file-input-text');
-                if (this.files.length > 0) {
-                    fileText.textContent = this.files[0].name;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Dropzone functionality
+            setupDropzone('log-dropzone', 'log-file-input');
+            setupDropzone('audio-dropzone', 'audio-file-input');
+            
+            // File selection from existing files
+            const selectedLogInput = document.getElementById('selected-log-input');
+            const selectedAudioInput = document.getElementById('selected-audio-input');
+            
+            // Set initial values based on current selections
+            {% if current_log %}
+                selectedLogInput.value = "{{ current_log }}";
+            {% endif %}
+            {% if current_audio %}
+                selectedAudioInput.value = "{{ current_audio }}";
+            {% endif %}
+        });
+        
+        function setupDropzone(dropzoneId, inputId) {
+            const dropzone = document.getElementById(dropzoneId);
+            const input = document.getElementById(inputId);
+            
+            // Click on dropzone to open file dialog
+            dropzone.addEventListener('click', function() {
+                input.click();
+            });
+            
+            // Display file name when selected
+            input.addEventListener('change', function() {
+                if (input.files.length > 0) {
+                    const fileName = input.files[0].name;
+                    dropzone.querySelector('.upload-text').textContent = fileName;
+                    dropzone.classList.add('has-file');
                 } else {
-                    fileText.textContent = this.id === 'log_file' 
-                        ? 'Select a log file...' 
-                        : 'Select an audio file...';
+                    resetDropzone(dropzone, inputId);
                 }
             });
-        });
+            
+            // Drag and drop functionality
+            dropzone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+            
+            dropzone.addEventListener('dragleave', function() {
+                dropzone.classList.remove('dragover');
+            });
+            
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    input.files = e.dataTransfer.files;
+                    
+                    // Trigger change event manually
+                    const changeEvent = new Event('change', { bubbles: true });
+                    input.dispatchEvent(changeEvent);
+                }
+            });
+        }
+        
+        function resetDropzone(dropzone, inputId) {
+            let uploadText;
+            let uploadSubtext;
+            
+            if (inputId === 'log-file-input') {
+                uploadText = 'Drag & drop a log file here';
+                uploadSubtext = 'or click to browse (.log, .txt)';
+            } else {
+                uploadText = 'Drag & drop an audio file here';
+                uploadSubtext = 'or click to browse (.mp3, .wav, .ogg, .m4a)';
+            }
+            
+            dropzone.querySelector('.upload-text').textContent = uploadText;
+            dropzone.querySelector('.upload-subtext').textContent = uploadSubtext;
+            dropzone.classList.remove('has-file');
+        }
+        
+        function selectFile(fileType, filename) {
+            // Update the hidden input for form submission
+            if (fileType === 'log') {
+                document.getElementById('selected-log-input').value = filename;
+            } else if (fileType === 'audio') {
+                document.getElementById('selected-audio-input').value = filename;
+            }
+            
+            // Submit the form to update selections
+            document.getElementById('upload-form').submit();
+        }
+        
+        function deleteFile(fileType, filename) {
+            if (confirm(`Are you sure you want to delete the ${fileType} file: ${filename}?`)) {
+                const formData = new FormData();
+                formData.append('file_type', fileType);
+                formData.append('filename', filename);
+                
+                fetch('/delete_file', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload the page to refresh the file lists
+                        window.location.reload();
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while trying to delete the file.');
+                });
+            }
+        }
     </script>
 </body>
 </html> 

@@ -361,62 +361,45 @@ def reset_state():
 
 @app.route('/api/files')
 def list_files():
-    """List all available files in the upload directories"""
-    log_files = []
-    audio_files = []
+    log_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER_LOGS']) 
+                if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER_LOGS'], f))]
+    audio_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER_AUDIO']) 
+                  if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], f))]
     
-    # List log files
-    try:
-        for f in os.listdir(app.config['UPLOAD_FOLDER_LOGS']):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER_LOGS'], f)
-            if os.path.isfile(file_path):
-                file_info = {
-                    'name': f,
-                    'path': file_path,
-                    'size': os.path.getsize(file_path),
-                    'modified': os.path.getmtime(file_path)
-                }
-                log_files.append(file_info)
-    except Exception as e:
-        print(f"Error listing log files: {str(e)}")
-    
-    # List audio files
-    try:
-        for f in os.listdir(app.config['UPLOAD_FOLDER_AUDIO']):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], f)
-            if os.path.isfile(file_path):
-                file_info = {
-                    'name': f,
-                    'path': file_path,
-                    'size': os.path.getsize(file_path),
-                    'modified': os.path.getmtime(file_path)
-                }
-                audio_files.append(file_info)
-    except Exception as e:
-        print(f"Error listing audio files: {str(e)}")
-    
-    # Also check for the default log file
-    default_log = "84bec4d9-bd4b-4097-9d57-8067a01441b5_pipeline_debug (2).log"
-    default_log_exists = os.path.exists(default_log)
-    default_log_info = None
-    if default_log_exists:
-        default_log_info = {
-            'name': default_log,
-            'path': os.path.abspath(default_log),
-            'size': os.path.getsize(default_log),
-            'modified': os.path.getmtime(default_log)
-        }
-    
-    # Return current state
     return jsonify({
-        'current_log_file': current_log_file,
-        'current_log_file_exists': os.path.exists(current_log_file) if current_log_file else False,
-        'current_audio_file': current_audio_file,
-        'current_audio_file_exists': os.path.exists(current_audio_file) if current_audio_file else False,
         'log_files': log_files,
-        'audio_files': audio_files,
-        'default_log': default_log_info
+        'audio_files': audio_files
     })
+
+@app.route('/delete_file', methods=['POST'])
+def delete_file():
+    global current_log_file, current_audio_file
+    
+    file_type = request.form.get('file_type')
+    filename = request.form.get('filename')
+    
+    if not file_type or not filename:
+        return jsonify({'success': False, 'error': 'Missing file_type or filename parameter'}), 400
+    
+    if file_type == 'log':
+        file_path = os.path.join(app.config['UPLOAD_FOLDER_LOGS'], filename)
+        if current_log_file and os.path.basename(current_log_file) == filename:
+            current_log_file = None
+    elif file_type == 'audio':
+        file_path = os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], filename)
+        if current_audio_file and os.path.basename(current_audio_file) == filename:
+            current_audio_file = None
+    else:
+        return jsonify({'success': False, 'error': 'Invalid file_type parameter'}), 400
+    
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            return jsonify({'success': True, 'message': f'{file_type.capitalize()} file {filename} deleted successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'File not found'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5005) 
