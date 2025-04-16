@@ -1,0 +1,13 @@
+[Unit]
+Description=Frame Reader Gunicorn Service
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/your/app
+ExecStart=/path/to/your/app/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 --timeout 120 wsgi:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target 

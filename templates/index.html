@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>Frame Viewer</h1>
+                <div class="nav-links">
+                    <a href="{{ url_for('index') }}" class="nav-link active">
+                        <i class="fas fa-chart-line"></i> Frame Viewer
+                    </a>
+                    <a href="{{ url_for('upload_page') }}" class="nav-link">
+                        <i class="fas fa-upload"></i> Upload Files
+                    </a>
+                    <a href="{{ url_for('reset_state') }}" class="nav-link nav-link-reset">
+                        <i class="fas fa-sync-alt"></i> Reset
+                    </a>
+                </div>
+            </div>
+            <div class="controls">
+                <div class="filter-container">
+                    <div class="filter-header collapsible-header">
+                        <h3><i class="fas fa-caret-down collapse-indicator"></i> Frame Types</h3>
+                        <div class="header-buttons">
+                            <button id="reset-frame-types" class="reset-btn">Reset</button>
+                            <button class="collapse-btn">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="frame-type-filters" class="filter-options collapsible-content"></div>
+                </div>
+                <div class="filter-container">
+                    <div class="filter-header collapsible-header">
+                        <h3><i class="fas fa-caret-down collapse-indicator"></i> Components</h3>
+                        <div class="header-buttons">
+                            <button id="reset-components" class="reset-btn">Reset</button>
+                            <button class="collapse-btn">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="component-search collapsible-content">
+                        <input type="text" id="component-search" placeholder="Search components...">
+                    </div>
+                    <div id="component-filters" class="filter-options scrollable collapsible-content"></div>
+                </div>
+                <div class="filter-container">
+                    <div class="filter-header collapsible-header">
+                        <h3><i class="fas fa-caret-down collapse-indicator"></i> Direction</h3>
+                        <div class="header-buttons">
+                            <button id="reset-direction" class="reset-btn">Reset</button>
+                            <button class="collapse-btn">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="direction-filters" class="filter-options collapsible-content">
+                        <div id="downstream-filter" class="filter-chip">
+                            <i class="fas fa-arrow-right"></i> Downstream
+                        </div>
+                        <div id="upstream-filter" class="filter-chip">
+                            <i class="fas fa-arrow-left"></i> Upstream
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div class="timeline-section">
+                <div class="timeline-container">
+                    <div id="timeline" class="timeline"></div>
+                </div>
+                <div class="timeline-playback">
+                    <div class="playback-controls">
+                        <button id="play-btn" class="playback-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button id="pause-btn" class="playback-btn" style="display: none;">
+                            <i class="fas fa-pause"></i>
+                        </button>
+                        <button id="step-back-btn" class="playback-btn">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button id="step-forward-btn" class="playback-btn">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                    </div>
+                    <div class="playback-range">
+                        <span id="current-time">0.000</span>
+                        <div class="range-slider">
+                            <input type="range" id="time-slider" min="0" max="100" value="0" class="range-input">
+                        </div>
+                        <span id="max-time">0.000</span>
+                    </div>
+                    <div class="playback-speed">
+                        <span>Speed:</span>
+                        <select id="speed-select" class="speed-select">
+                            <option value="0.25">0.25x</option>
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="2">2x</option>
+                            <option value="4">4x</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Audio Player -->
+                <div id="audio-container" class="audio-container" style="display: none;">
+                    <div class="audio-info">
+                        <i class="fas fa-music"></i>
+                        <span id="audio-filename">No audio file loaded</span>
+                    </div>
+                    <div class="waveform-container">
+                        <canvas id="waveform-canvas" class="waveform-canvas"></canvas>
+                        <div id="waveform-progress" class="waveform-progress"></div>
+                        <div class="waveform-time-markers">
+                            <span id="waveform-start-time">0:00</span>
+                            <span id="waveform-end-time">0:00</span>
+                        </div>
+                    </div>
+                    <audio id="audio-player" controls preload="metadata" controlsList="nodownload noplaybackrate">
+                        <source src="" type="audio/mpeg">
+                        <source src="" type="audio/wav">
+                        <source src="" type="audio/ogg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            </div>
+            
+            <div class="frames-container">
+                <div id="frames-list" class="frames-list"></div>
+            </div>
+        </main>
+        
+        <footer>
+            <div id="stats-container" class="stats">
+                <span id="total-frames">0 frames</span>
+                <span id="filtered-frames">0 displayed</span>
+                <!-- Latency stats will be inserted here -->
+            </div>
+            <div class="current-files">
+                <span id="current-log-file">No log file selected</span>
+                <span id="sync-status"></span>
+                <span class="keyboard-shortcuts" title="Keyboard Shortcuts">
+                    <i class="fas fa-keyboard"></i>
+                    <span class="shortcut-text">S: Toggle audio sync | L: Toggle latency display</span>
+                </span>
+                <button id="debug-btn" class="debug-btn" title="Check log file loading status">
+                    <i class="fas fa-bug"></i>
+                </button>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html> 

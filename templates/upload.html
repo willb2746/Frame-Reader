@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Files - Frame Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Upload Files</h1>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link">
+                    <i class="fas fa-chart-line"></i> Frame Viewer
+                </a>
+                <a href="{{ url_for('upload_page') }}" class="nav-link active">
+                    <i class="fas fa-upload"></i> Upload Files
+                </a>
+                <a href="{{ url_for('reset_state') }}" class="nav-link nav-link-reset">
+                    <i class="fas fa-sync-alt"></i> Reset
+                </a>
+            </div>
+        </header>
+        
+        <main>
+            <div class="upload-container">
+                <form action="{{ url_for('upload_files') }}" method="post" enctype="multipart/form-data" class="upload-form">
+                    <div class="upload-section">
+                        <h2>Upload New Files</h2>
+                        
+                        <div class="upload-group">
+                            <label for="log_file">Log File:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="log_file" name="log_file" accept=".log,.txt" class="file-input">
+                                <div class="file-input-custom">
+                                    <span class="file-input-text">Select a log file...</span>
+                                    <span class="file-input-button">Browse</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="upload-group">
+                            <label for="audio_file">Audio Recording:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="audio_file" name="audio_file" accept=".mp3,.wav,.m4a,.ogg" class="file-input">
+                                <div class="file-input-custom">
+                                    <span class="file-input-text">Select an audio file...</span>
+                                    <span class="file-input-button">Browse</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-section">
+                        <h2>Select Existing Files</h2>
+                        
+                        <div class="upload-group">
+                            <label for="selected_log">Log File:</label>
+                            <select id="selected_log" name="selected_log" class="file-select">
+                                <option value="">-- Select a log file --</option>
+                                {% for log_file in log_files %}
+                                <option value="{{ log_file }}" {% if log_file == current_log %}selected{% endif %}>{{ log_file }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="upload-group">
+                            <label for="selected_audio">Audio Recording:</label>
+                            <select id="selected_audio" name="selected_audio" class="file-select">
+                                <option value="">-- Select an audio file --</option>
+                                {% for audio_file in audio_files %}
+                                <option value="{{ audio_file }}" {% if audio_file == current_audio %}selected{% endif %}>{{ audio_file }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="upload-actions">
+                        <button type="submit" class="upload-btn">Save and Continue</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+        
+        <footer>
+            <div class="current-files">
+                <div>Current Log File: <span class="current-file">{{ current_log if current_log else 'None' }}</span></div>
+                <div>Current Audio File: <span class="current-file">{{ current_audio if current_audio else 'None' }}</span></div>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        // Custom file input display
+        document.querySelectorAll('.file-input').forEach(fileInput => {
+            fileInput.addEventListener('change', function() {
+                const fileText = this.parentElement.querySelector('.file-input-text');
+                if (this.files.length > 0) {
+                    fileText.textContent = this.files[0].name;
+                } else {
+                    fileText.textContent = this.id === 'log_file' 
+                        ? 'Select a log file...' 
+                        : 'Select an audio file...';
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
