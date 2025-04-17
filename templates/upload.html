@@ -92,6 +92,12 @@
             margin-bottom: 0.5rem;
         }
         
+        .file-expiry {
+            font-size: 0.8rem;
+            color: #ff9800;
+            margin-bottom: 0.5rem;
+        }
+        
         .file-actions {
             display: flex;
             justify-content: space-between;
@@ -326,6 +332,7 @@
                                             </div>
                                             <div class="file-name">{{ file }}</div>
                                             <div class="file-type">Log File</div>
+                                            <div class="file-expiry">{{ file_expiry.get(file, 'N/A') }}</div>
                                             <div class="file-actions">
                                                 <button type="button" class="select-btn" onclick="selectFile('log', '{{ file }}')">
                                                     <i class="fas fa-check"></i> Select
@@ -360,6 +367,7 @@
                                             </div>
                                             <div class="file-name">{{ file }}</div>
                                             <div class="file-type">Audio File</div>
+                                            <div class="file-expiry">{{ file_expiry.get(file, 'N/A') }}</div>
                                             <div class="file-actions">
                                                 <button type="button" class="select-btn" onclick="selectFile('audio', '{{ file }}')">
                                                     <i class="fas fa-check"></i> Select

@@ -4,6 +4,9 @@ import os
 import json
 from collections import defaultdict
 from werkzeug.utils import secure_filename
+import time
+import threading
+import datetime
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config['UPLOAD_FOLDER_LOGS'] = 'uploads/logs'
@@ -11,6 +14,7 @@ app.config['UPLOAD_FOLDER_AUDIO'] = 'uploads/audio'
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max upload sizeh
 app.config['ALLOWED_EXTENSIONS_LOGS'] = {'log', 'txt'}
 app.config['ALLOWED_EXTENSIONS_AUDIO'] = {'mp3', 'wav', 'm4a', 'ogg'}
+app.config['FILE_EXPIRY_SECONDS'] = 3600  # 1 hour
 
 # Create upload folders if they don't exist
 os.makedirs(app.config['UPLOAD_FOLDER_LOGS'], exist_ok=True)
@@ -20,8 +24,61 @@ os.makedirs(app.config['UPLOAD_FOLDER_AUDIO'], exist_ok=True)
 current_log_file = None
 current_audio_file = None
 
+# Dictionary to track file upload times
+file_upload_times = {}
+cleanup_thread = None
+cleanup_running = False
+
 def allowed_file(filename, allowed_extensions):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+# Function to clean up expired files
+def cleanup_files():
+    global cleanup_running
+    cleanup_running = True
+    try:
+        while cleanup_running:
+            current_time = time.time()
+            files_to_remove = []
+            
+            # Find expired files
+            for filepath, upload_time in file_upload_times.items():
+                if current_time - upload_time > app.config['FILE_EXPIRY_SECONDS']:
+                    files_to_remove.append(filepath)
+            
+            # Remove expired files
+            for filepath in files_to_remove:
+                if os.path.exists(filepath):
+                    try:
+                        os.remove(filepath)
+                        print(f"Automatically deleted expired file: {filepath}")
+                        # If this is the current file, reset it
+                        global current_log_file, current_audio_file
+                        if filepath == current_log_file:
+                            current_log_file = None
+                        elif filepath == current_audio_file:
+                            current_audio_file = None
+                    except Exception as e:
+                        print(f"Error deleting expired file {filepath}: {str(e)}")
+                del file_upload_times[filepath]
+            
+            # Sleep for a while before checking again
+            time.sleep(60)  # Check every minute
+    except Exception as e:
+        print(f"Error in cleanup thread: {str(e)}")
+    finally:
+        cleanup_running = False
+
+# Start cleanup thread
+def start_cleanup_thread():
+    global cleanup_thread
+    if cleanup_thread is None or not cleanup_thread.is_alive():
+        cleanup_thread = threading.Thread(target=cleanup_files, daemon=True)
+        cleanup_thread.start()
+        print(f"File cleanup thread started at {datetime.datetime.now()}")
+
+# Start the cleanup thread when the application starts
+start_cleanup_thread()
 
 def parse_log_file(file_path):
     frames = []
@@ -183,9 +240,40 @@ def upload_page():
     audio_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER_AUDIO']) 
                   if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], f))]
     
+    # Calculate expiration times for display
+    file_expiry = {}
+    current_time = time.time()
+    
+    # Process log files
+    for filename in log_files:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER_LOGS'], filename)
+        if filepath in file_upload_times:
+            elapsed = current_time - file_upload_times[filepath]
+            remaining_seconds = max(0, app.config['FILE_EXPIRY_SECONDS'] - elapsed)
+            remaining_minutes = int(remaining_seconds / 60)
+            file_expiry[filename] = f"Expires in {remaining_minutes} minutes"
+        else:
+            # For existing files without upload time, set it now
+            file_upload_times[filepath] = current_time
+            file_expiry[filename] = f"Expires in 60 minutes"
+    
+    # Process audio files
+    for filename in audio_files:
+        filepath = os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], filename)
+        if filepath in file_upload_times:
+            elapsed = current_time - file_upload_times[filepath]
+            remaining_seconds = max(0, app.config['FILE_EXPIRY_SECONDS'] - elapsed)
+            remaining_minutes = int(remaining_seconds / 60)
+            file_expiry[filename] = f"Expires in {remaining_minutes} minutes"
+        else:
+            # For existing files without upload time, set it now
+            file_upload_times[filepath] = current_time
+            file_expiry[filename] = f"Expires in 60 minutes"
+    
     return render_template('upload.html', 
                           log_files=log_files, 
                           audio_files=audio_files,
+                          file_expiry=file_expiry,
                           current_log=os.path.basename(current_log_file) if current_log_file else None,
                           current_audio=os.path.basename(current_audio_file) if current_audio_file else None)
 
@@ -201,7 +289,9 @@ def upload_files():
             log_path = os.path.join(app.config['UPLOAD_FOLDER_LOGS'], log_filename)
             log_file.save(log_path)
             current_log_file = log_path
-            print(f"Uploaded log file: {current_log_file}")
+            # Add to upload times for auto-deletion
+            file_upload_times[log_path] = time.time()
+            print(f"Uploaded log file: {current_log_file} (expires in 1 hour)")
             # Read a few lines to verify the log file format
             try:
                 with open(current_log_file, 'r') as f:
@@ -218,7 +308,9 @@ def upload_files():
             audio_path = os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], audio_filename)
             audio_file.save(audio_path)
             current_audio_file = audio_path
-            print(f"Uploaded audio file: {current_audio_file}")
+            # Add to upload times for auto-deletion
+            file_upload_times[audio_path] = time.time()
+            print(f"Uploaded audio file: {current_audio_file} (expires in 1 hour)")
     
     # Alternative: select existing files
     if 'selected_log' in request.form and request.form['selected_log']:
@@ -361,10 +453,48 @@ def reset_state():
 
 @app.route('/api/files')
 def list_files():
-    log_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER_LOGS']) 
-                if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER_LOGS'], f))]
-    audio_files = [f for f in os.listdir(app.config['UPLOAD_FOLDER_AUDIO']) 
-                  if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], f))]
+    log_files = []
+    audio_files = []
+    
+    # List log files with their remaining time
+    for f in os.listdir(app.config['UPLOAD_FOLDER_LOGS']):
+        filepath = os.path.join(app.config['UPLOAD_FOLDER_LOGS'], f)
+        if os.path.isfile(filepath):
+            # Calculate remaining time
+            remaining_seconds = 0
+            if filepath in file_upload_times:
+                elapsed = time.time() - file_upload_times[filepath]
+                remaining_seconds = max(0, app.config['FILE_EXPIRY_SECONDS'] - elapsed)
+                remaining_minutes = int(remaining_seconds / 60)
+            else:
+                # If we don't know the upload time, set it now
+                file_upload_times[filepath] = time.time()
+                remaining_minutes = int(app.config['FILE_EXPIRY_SECONDS'] / 60)
+            
+            log_files.append({
+                'name': f,
+                'remaining_minutes': remaining_minutes
+            })
+    
+    # List audio files with their remaining time
+    for f in os.listdir(app.config['UPLOAD_FOLDER_AUDIO']):
+        filepath = os.path.join(app.config['UPLOAD_FOLDER_AUDIO'], f)
+        if os.path.isfile(filepath):
+            # Calculate remaining time
+            remaining_seconds = 0
+            if filepath in file_upload_times:
+                elapsed = time.time() - file_upload_times[filepath]
+                remaining_seconds = max(0, app.config['FILE_EXPIRY_SECONDS'] - elapsed)
+                remaining_minutes = int(remaining_seconds / 60)
+            else:
+                # If we don't know the upload time, set it now
+                file_upload_times[filepath] = time.time()
+                remaining_minutes = int(app.config['FILE_EXPIRY_SECONDS'] / 60)
+            
+            audio_files.append({
+                'name': f,
+                'remaining_minutes': remaining_minutes
+            })
     
     return jsonify({
         'log_files': log_files,
@@ -402,4 +532,6 @@ def delete_file():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
+    # Ensure cleanup thread is started
+    start_cleanup_thread()
     app.run(debug=True, port=5005) 
