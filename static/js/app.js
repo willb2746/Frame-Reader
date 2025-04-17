@@ -978,19 +978,57 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleLatencyDisplay() {
         isShowingLatency = !isShowingLatency;
         
-        // Redraw the waveform
-        if (waveformData.length > 0 && waveformCanvas) {
+        // If we have a canvas, redraw the waveform
+        if (waveformCanvas && waveformCanvas.getContext && audioBuffer) {
             const ctx = waveformCanvas.getContext('2d');
             drawWaveform(ctx);
         }
+        
+        // Update the UI to show the current setting
+        const latencyDisplayStatus = document.createElement('span');
+        latencyDisplayStatus.classList.add('notification');
+        latencyDisplayStatus.textContent = isShowingLatency ? 'Latency Display: ON' : 'Latency Display: OFF';
+        latencyDisplayStatus.style.position = 'fixed';
+        latencyDisplayStatus.style.bottom = '10px';
+        latencyDisplayStatus.style.right = '10px';
+        latencyDisplayStatus.style.background = 'rgba(0, 0, 0, 0.7)';
+        latencyDisplayStatus.style.color = '#fff';
+        latencyDisplayStatus.style.padding = '5px 10px';
+        latencyDisplayStatus.style.borderRadius = '4px';
+        latencyDisplayStatus.style.zIndex = '1000';
+        document.body.appendChild(latencyDisplayStatus);
+        
+        // Remove notification after 2 seconds
+        setTimeout(() => {
+            document.body.removeChild(latencyDisplayStatus);
+        }, 2000);
     }
     
-    // Add keyboard shortcut to toggle latency display (L key)
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'l' && latencyData.length > 0) {
-            toggleLatencyDisplay();
-        }
-    });
+    function toggleAudioSync() {
+        if (!audioLoaded) return;
+        
+        audioSyncEnabled = !audioSyncEnabled;
+        syncStatus.textContent = audioSyncEnabled ? 'Audio Sync: ON' : 'Audio Sync: OFF';
+        
+        // Show notification
+        const syncNotification = document.createElement('span');
+        syncNotification.classList.add('notification');
+        syncNotification.textContent = audioSyncEnabled ? 'Audio Sync: ON' : 'Audio Sync: OFF';
+        syncNotification.style.position = 'fixed';
+        syncNotification.style.bottom = '10px';
+        syncNotification.style.right = '10px';
+        syncNotification.style.background = 'rgba(0, 0, 0, 0.7)';
+        syncNotification.style.color = '#fff';
+        syncNotification.style.padding = '5px 10px';
+        syncNotification.style.borderRadius = '4px';
+        syncNotification.style.zIndex = '1000';
+        document.body.appendChild(syncNotification);
+        
+        // Remove notification after 2 seconds
+        setTimeout(() => {
+            document.body.removeChild(syncNotification);
+        }, 2000);
+    }
 
     // Initialize collapsible sections
     function initializeCollapsibleSections() {
@@ -1140,4 +1178,23 @@ document.addEventListener('DOMContentLoaded', () => {
             scrollToCurrentFrame();
         }
     }
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Only trigger when not typing in an input field
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        if (e.key === ' ' || e.code === 'Space') {
+            e.preventDefault(); // Prevent page scroll
+            if (isPlaying) {
+                stopPlayback();
+            } else {
+                startPlayback();
+            }
+        } else if (e.key === 's' || e.key === 'S') {
+            toggleAudioSync();
+        } else if (e.key === 'l' || e.key === 'L') {
+            toggleLatencyDisplay();
+        }
+    });
 }); 
