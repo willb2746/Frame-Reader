@@ -216,10 +216,59 @@
         .two-columns {
             display: flex;
             gap: 2rem;
+            flex-wrap: nowrap;
+            width: 100%;
         }
         
         .column {
             flex: 1;
+            min-width: 300px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-columns {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+            
+            .column {
+                min-width: 300px;
+                width: 80%;
+                flex-shrink: 0;
+            }
+        }
+        
+        .format-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--surface-color-hover);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        
+        .format-info h4 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .format-info p {
+            margin-bottom: 0.5rem;
+        }
+        
+        .format-info pre {
+            background-color: var(--surface-color);
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .format-info a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .format-info a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -283,6 +332,18 @@
                                     <div class="upload-subtext">or click to browse (.log, .txt)</div>
                                     <input type="file" name="log_file" id="log-file-input" class="file-input" accept=".log,.txt">
                                 </div>
+                                
+                                <div class="format-info">
+                                    <h4><i class="fas fa-info-circle"></i> Expected Log Format</h4>
+                                    <p>Files should follow this timestamp format:</p>
+                                    <pre>[timestamp]: [frame_type]: [source] [direction_arrow] [destination]</pre>
+                                    <p>Example lines:</p>
+                                    <pre>0.123: ASR_START: ASR ↓ LLM
+0.456: USER_MESSAGE: User ↓ System
+0.789: AI_RESPONSE: System ↑ User</pre>
+                                    <p>Direction arrows can be: ↓ ↑ → ← (or v ^ -> &lt;-)</p>
+                                    <p><a href="#" onclick="downloadExample()">Download example file</a></p>
+                                </div>
                             </div>
                             
                             <!-- Audio file upload -->
@@ -293,6 +354,13 @@
                                     <div class="upload-text">Drag & drop an audio file here</div>
                                     <div class="upload-subtext">or click to browse (.mp3, .wav, .ogg, .m4a)</div>
                                     <input type="file" name="audio_file" id="audio-file-input" class="file-input" accept=".mp3,.wav,.ogg,.m4a">
+                                </div>
+                                
+                                <div class="format-info">
+                                    <h4><i class="fas fa-info-circle"></i> Audio Files</h4>
+                                    <p>If available, upload the conversation audio file to enable synchronized playback with the frames.</p>
+                                    <p>Supported formats: MP3, WAV, M4A, OGG</p>
+                                    <p><strong>Note:</strong> Files are automatically deleted after 1 hour.</p>
                                 </div>
                             </div>
                         </div>
@@ -410,6 +478,53 @@
                 selectedAudioInput.value = "{{ current_audio }}";
             {% endif %}
         });
+        
+        function downloadExample() {
+            // Create example log content
+            const exampleContent = `0.000: CALL_START: System ↓ User
+0.124: USER_MESSAGE: User ↓ System
+0.456: ASR_START: ASR ↓ LLM
+0.789: ASR_PARTIAL: ASR ↓ LLM
+1.023: ASR_FINAL: ASR ↓ LLM
+1.245: INTENT_DETECTED: NLU ↓ LLM
+1.567: AI_THINKING: LLM → System
+1.890: AI_RESPONSE: System ↑ User
+2.234: TTS_START: TTS ↑ User
+2.567: TTS_AUDIO: TTS ↑ User
+2.890: TURN_END: System ↑ User
+3.123: USER_MESSAGE: User ↓ System
+3.456: ASR_START: ASR ↓ LLM
+3.789: ASR_PARTIAL: ASR ↓ LLM
+4.012: ASR_FINAL: ASR ↓ LLM
+4.345: INTENT_DETECTED: NLU ↓ LLM
+4.678: AI_THINKING: LLM → System
+5.012: AI_RESPONSE: System ↑ User
+5.345: TTS_START: TTS ↑ User
+5.678: TTS_AUDIO: TTS ↑ User
+6.012: TURN_END: System ↑ User
+6.345: CALL_END: System ↑ User`;
+            
+            // Create a blob from the content
+            const blob = new Blob([exampleContent], { type: 'text/plain' });
+            
+            // Create a download link
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'example_log_file.log';
+            
+            // Trigger download
+            document.body.appendChild(a);
+            a.click();
+            
+            // Clean up
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+            
+            return false; // Prevent default link behavior
+        }
         
         function setupDropzone(dropzoneId, inputId) {
             const dropzone = document.getElementById(dropzoneId);
